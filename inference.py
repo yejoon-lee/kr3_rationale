@@ -1,14 +1,16 @@
 # obtain full attentions (over all layers and heads) and logits for later use
 # $ python inference.py [name] [artifact_path] [tuning_type]
+# example: $ python inference.py FT3 artifacts/finetuned_BERT:v0/misty-dust-2.pth FT
 
 import argparse
 import os
+
 import torch
 import transformers
 from datasets import Dataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import BertForSequenceClassification, BertTokenizer
+from transformers import BertForSequenceClassification
 
 # 0. basic setup
 parser = argparse.ArgumentParser()
@@ -22,9 +24,8 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 # 1. load model and load weights from artifact
 
-## load base model and tokenizer
+## load base model
 model = BertForSequenceClassification.from_pretrained('bert-base-multilingual-cased', num_labels=2).to(device)
-tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 
 def is_adapter_transformer():
     """
@@ -34,7 +35,7 @@ def is_adapter_transformer():
         return True
     return False
 
-## load the weights from provided artifact
+## load the wei`ghts from provided artifact
 if args.tuning_type == 'FT':
     assert not is_adapter_transformer()
     model.load_state_dict(torch.load(args.artifact_path, map_location=device))
@@ -51,32 +52,45 @@ else:
 # 2. model inference
 
 ## make
-kr3_tokenized = Dataset.load_from_disk('kr3_tokenized_max_pad')
-dloader = DataLoader(kr3_tokenized, batch_size=16)
+kr3_tokenized = Dataset.load_from_disk('kr3_tokenized_maxpad')
+kr3_tokenized.set_format(type='torch') # kr3_tokenized_maxpad should have torch format, but somehow not. hgf bug??
+dloader = DataLoader(kr3_tokenized, batch_size=64)
 
 ## empty tensors to store data
-full_attentions = torch.Tensor()
-full_logits = torch.Tensor()
+full_attentions = torch.Tensor(device='cpu')
+full_logits = torch.Tensor(device='cpu')
+
+## function to save attentions and logits
+def save_tensors():
+    dir_name = f'outputs/{args.name}'
+    if not os.path.isdir(dir_name):
+        os.makedirs(dir_name)
+    torch.save(full_attentions, f'outputs/{args.name}/attentions.pt')
+    torch.save(full_logits, f'outputs/{args.name}/logits.pt')
 
 ## inference
 model.eval()
 with torch.no_grad():
-    for batch in tqdm(dloader):
+    for i, batch in enumerate(tqdm(dloader)):
         # forward
         batch = {k: v.to(device) for k, v in batch.items()}
         outputs = model(**batch, output_attentions=True)
 
         # attn weights
-        # attentions.size() =`` [batch_size, num_layers, num_heads, 512, 512]; seq_len padded to max(512).
-        attentions = torch.stack([attn for attn in outputs.attentions.detach()], dim=1)
+        # attentions.size() = [batch_size, num_layers, num_heads, 512, 512]; seq_len padded to max(512).
+        attentions = torch.stack([attn.detach() for attn in outputs.attentions], dim=1).to(device='cpu') 
+        # mean over head, attn w.r.t. the first token([CLS]). I'd love to store all, but OOM.
+        attentions = attentions.mean(dim=2)[:,:,0,:] 
         full_attentions = torch.cat((full_attentions, attentions), dim=0)
 
         # logits
         # logits.size() = [batch_size, 2]
-        logits = outputs.logits.detach()
+        logits = outputs.logits.detach().to(device='cpu')
         full_logits = torch.cat((full_logits, logits), dim=0)
 
-## save attentions and logits
-os.makedirs(f'outputs/{args.name}')
-torch.save(full_attentions, f'outputs/{args.name}/attentions.pt')
-torch.save(full_logits, f'outputs/{args.name}/logits.pt')
+        # save
+        checkpoint = 1000
+        if i % checkpoint == 0:
+            save_tensors()
+
+save_tensors()
