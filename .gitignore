@@ -2,4 +2,5 @@
 artifacts
 wandb
 kr3_tokenized
-kr3_tokenized_max_pad
+kr3_tokenized_maxpad
+outputs
