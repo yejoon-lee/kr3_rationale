@@ -55,7 +55,7 @@ kr3_tokenized.set_format(type='torch')
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
-dloader = DataLoader(kr3_tokenized, batch_size = 32, collate_fn=data_collator)
+dloader = DataLoader(kr3_tokenized, batch_size = 32, collate_fn=data_collator) # Important not to shuffle.
 
 ## inference
 model.eval()

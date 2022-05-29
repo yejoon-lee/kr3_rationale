@@ -1,6 +1,9 @@
 .devcontainer
+__pycache__
+
 artifacts
 wandb
 kr3_tokenized
 kr3_tokenized_maxpad
 outputs
+rationales
