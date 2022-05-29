@@ -1,11 +1,14 @@
-# FRESH(Faithful Rationale Extraction from Saliency tHresholding) from Jain et al., 2020
+# extract and save rationale from each examples using attention
+# Implementation of FRESH(Faithful Rationale Extraction from Saliency tHresholding) from Jain et al., 2020
+# Uses multiprocessing
+
 # $ python fresh_extract.py [name] [save_path] [--strategy] [--ratio] 
-# example: $ python fresh_extract.py FT3 /rationales
+# example: $ python fresh_extract.py FT3 rationales/FT3
 
 import argparse
 from glob import glob
+from multiprocessing import Pool
 from typing import Iterable, Literal, Tuple
-from tqdm import tqdm
 
 import torch
 from datasets import Dataset, load_dataset
@@ -14,8 +17,9 @@ from transformers import BertTokenizer
 
 # 0. argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("name", help='path to load attentions and logits')
+parser.add_argument("name", help='path to load attentions')
 parser.add_argument("save_path", help='path to save the rationales')
+# to understand two args below, see discretize_attn()
 parser.add_argument("--strategy", help='Strategy for discretization, used in Jain et al., 2020', default='Top-k')
 parser.add_argument("--ratio", help='ratio of length of rationale to whole input.', default=0.2)
 args = parser.parse_args()
@@ -29,32 +33,40 @@ kr3_binary = kr3.filter(lambda example: example['Rating'] != 2)
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 
 
-# 2. extract rationales for every examples
-def extract(strategy : Literal['continguous', 'Top-k'] = 'Top-k', 
-          ratio : float = 0.2):
-    
+# 2. extract rationales for every examples in the batch
+def extract(batch_i : int, 
+            strategy : Literal['continguous', 'Top-k'] = 'Top-k', 
+            ratio : float = 0.2):
+    '''Extract rationales from examples using given heuristic and ratio.
+    Args:
+        batch_i: batch index used to load the attention weights
+        strategy: Strategy for discretization, used in Jain et al., 2020
+        ratio: ratio of length of rationale to whole input.
+    '''
     kr3_rationale = Dataset.from_dict({}) # empty Dataset to store rationales, unrationales, and rating
 
-    for batch_i in tqdm(range(len(glob(f'outputs/{args.name}/attentions/batch_*.pt')))):
-        attns = torch.load(f'outputs/{args.name}/attentions/batch_{batch_i}.pt')
-        for example_i in range(attns.size()[0]): # attns.size() = [batch_size, num_layers, seq_len]
-            # index attn of single example from the LAST LAYER
-            attn = attns[example_i, -1, :]
+    # load attention scores
+    attns = torch.load(f'outputs/{args.name}/attentions/batch_{batch_i}.pt') # attns.size() = [batch_size, num_layers, seq_len]
+    attns = attns[:,-1,:] # only attn from the LAST LAYER; attns.size() = [batch_size, seq_len]
 
-            # get words & rating corresponding to the attn from the dataset
-            # note that we match attentions and words/rating by their order. No shuffle was done during inference.
-            words = kr3_binary[batch_i*32 + example_i]['Review'].split(' ')
-            rating = kr3_binary[batch_i*32 + example_i]['Rating']
+    for example_i in range(attns.size()[0]): 
+        # index attn of single example
+        attn = attns[example_i, :]
+
+        # get words & rating corresponding to the attn from the dataset
+        # note that we match attentions and words/rating by their order. No shuffle was done during inference.
+        words = kr3_binary[batch_i*32 + example_i]['Review'].split(' ')
+        rating = kr3_binary[batch_i*32 + example_i]['Rating']
         
-            # extract rationale using functions below
-            attn = exclude_cls_sep(attn)
-            attn_per_word = get_attn_per_word(attn, words, tokenizer)
-            rationale, unrationale = discretize_attn(attn_per_word, words, strategy=strategy, ratio=ratio)
+        # extract rationale using functions below
+        attn = exclude_cls_sep(attn)
+        attn_per_word = get_attn_per_word(attn, words, tokenizer)
+        rationale, unrationale = discretize_attn(attn_per_word, words, strategy=strategy, ratio=ratio)
 
-            # add item in the dataset
-            kr3_rationale = kr3_rationale.add_item({'Rating':rating, 'Rationale':' '.join(rationale), 'Unrationale':' '.join(unrationale)})
+        # add item in the dataset
+        kr3_rationale = kr3_rationale.add_item({'Rating':rating, 'Rationale':' '.join(rationale), 'Unrationale':' '.join(unrationale)})
     
-    kr3_rationale.save_to_disk(args.save_path) # save the dataset
+    kr3_rationale.save_to_disk(f'{args.save_path}/batch_{batch_i}') # save the dataset
 
 
 # functions below all operate on attention for SINGLE EXAMPLE (not batch)
@@ -71,8 +83,8 @@ def exclude_cls_sep(attn : torch.Tensor) -> torch.Tensor:
     comes first and [SEP] comes last, and they are the only speical tokens. Code should be 
     different in different settings, e.g. where [SEP] is in the middle or prompt exists.
     '''
-    attn[0] = 0.0 # idx 0 for [CLS]
-    attn[torch.nonzero(attn)[-1]] = 0.0 # last nonzero idx for [SEP]
+    attn[0] = 0.0 # idx 0 is [CLS]
+    attn[torch.nonzero(attn)[-1]] = 0.0 # last nonzero idx is [SEP]
     attn /= attn.sum() # normalize over the remanings
     return attn
 
@@ -86,10 +98,10 @@ def get_attn_per_word(attn : torch.Tensor, words : Iterable, tokenizer) -> torch
         words: iterable of words
         tokenizer: tokenizer tokenizes word to tokens
     Return:
-        attention scores per word whose type is torch.Tensor and length is same as `words`.
+        attention scores per word whose type is torch.Tensor and length is the same to `words`.
     '''
 
-    attn_per_word = torch.zeros(len(words))
+    attn_per_word = torch.zeros(len(words)) # storage
 
     # start index by 1
     # why not 0? Because 0 corresponds to [CLS]. cf) We don't have [SEP] in the middle of the input, so we do not consider that.
@@ -119,9 +131,9 @@ def discretize_attn(attn : torch.Tensor,
     Dicscretize soft attentions scores into hard rationales.
     Args:
         attn: attention score per words
-        words: iterable of words:
+        words: iterable of words
         strategy: Strategy for discretization, used in Jain et al., 2020
-        ratio: ratio of length of rationale to whole input.
+        ratio: the length of rationale / the length of whole input
     Return:
         Tuple of (rationale, unrationale)
         Rationale is the list of words for the rationales.
@@ -165,5 +177,9 @@ def discretize_attn(attn : torch.Tensor,
 
         return rationale, unrationale
 
-# execute
-extract(strategy=args.strategy, ratio=args.ratio)
+
+# 3. execute extract() with multiprocessing
+batch_i_list = [i for i in range(len(glob(f'outputs/{args.name}/attentions/batch_*.pt')))]
+
+with Pool(128) as p:
+    p.map(extract, batch_i_list)
