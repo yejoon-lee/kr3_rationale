@@ -1,13 +1,18 @@
-import argparse
+# from multiprocessing import Pool
 
-parser = argparse.ArgumentParser()
-parser.add_argument("name", help='path to load attentions and logits')
-parser.add_argument("save_path", help='path to save the rationales')
-parser.add_argument("--strategy", help='Strategy for discretization, used in Jain et al., 2020', default='Top-k')
-parser.add_argument("--ratio", help='ratio of length of rationale to whole input.', default=0.2)
-args = parser.parse_args()
+# def f(x):
+#     n = 0
+#     for i in range(x):
+#         n += i
+#     return n
 
-print(args.name)
-print(args.save_path)
-print(args.strategy)
-print(args.ratio)
+# with Pool(1000) as p:
+#     print(p.map(f, [x for x in range(10000)]))
+
+# print(list(map(f, [x for x in range(10000)])))
+
+# import multiprocessing
+# print(multiprocessing.cpu_count())
+
+from glob import glob
+print(len(glob('rationlaes/FT3/batch_*')))

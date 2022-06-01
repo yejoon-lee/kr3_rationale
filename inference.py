@@ -23,6 +23,7 @@ args = parser.parse_args()
 # 1. load model and load weights from artifact
 
 ## load base model
+print('Cuda is available:', torch.cuda.is_available())
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 model = BertForSequenceClassification.from_pretrained('bert-base-multilingual-cased', num_labels=2).to(device)
 
@@ -63,6 +64,7 @@ with torch.no_grad():
     for i, batch in enumerate(tqdm(dloader)):
         # forward
         batch = {k: v.to(device) for k, v in batch.items()}
+        model = model.to(device)
         outputs = model(**batch, output_attentions=True)
 
         # full attn weights
