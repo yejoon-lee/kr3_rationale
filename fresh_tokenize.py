@@ -19,7 +19,7 @@ args = parser.parse_args()
 # 1. tokenizer from hgf
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 def tokenize_func(example):
-    return tokenizer(example['Rationale'], truncation=True)
+    return tokenizer(example['Rationale'], truncation=True, padding=True)
 
 # 2. function to preprocess (including tokenize) on single batch
 def preprocess_batch(batch_path):
