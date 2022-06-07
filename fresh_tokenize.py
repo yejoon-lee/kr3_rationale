@@ -3,7 +3,7 @@
 # Uses multiprocessing
 
 # $ python fresh_tokenize.py [name]
-# example: $ python fresh_tokenize.py FT3
+# example: $ python fresh_tokenize.py FT3_TopK
 
 import argparse
 from glob import glob

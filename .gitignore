@@ -5,5 +5,7 @@ artifacts
 wandb
 kr3_tokenized
 kr3_tokenized_maxpad
+kr4
+kr4_tokenized
 outputs
 rationales

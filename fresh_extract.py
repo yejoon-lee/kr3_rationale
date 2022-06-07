@@ -3,7 +3,7 @@
 # Uses multiprocessing
 
 # $ python fresh_extract.py [name] [save_path] [--strategy] [--ratio] 
-# example: $ python fresh_extract.py FT3 rationales/FT3
+# example: $ python fresh_extract.py FT3 kr4/FT3_TopK
 
 import argparse
 from glob import glob
@@ -181,5 +181,5 @@ def discretize_attn(attn : torch.Tensor,
 # 3. execute extract() with multiprocessing
 batch_i_list = [i for i in range(len(glob(f'outputs/{args.name}/attentions/batch_*.pt')))]
 
-with Pool(128) as p:
+with Pool(127) as p:
     p.map(extract, batch_i_list)

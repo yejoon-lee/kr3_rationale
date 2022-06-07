@@ -1,18 +1,10 @@
-# from multiprocessing import Pool
+import torch
+from torchmetrics.functional import f1_score
+device = torch.device('cuda')
 
-# def f(x):
-#     n = 0
-#     for i in range(x):
-#         n += i
-#     return n
-
-# with Pool(1000) as p:
-#     print(p.map(f, [x for x in range(10000)]))
-
-# print(list(map(f, [x for x in range(10000)])))
-
-# import multiprocessing
-# print(multiprocessing.cpu_count())
-
-from glob import glob
-print(len(glob('rationlaes/FT3/batch_*')))
+target = torch.tensor([0,1,0,1,0,1], device=device)
+preds = torch.tensor([1,1,0,1,1,0], device=device)
+print(target.device, preds.device)
+print(f1_score(preds, target, num_classes=2, average='none')[0].item())
+print(f1_score(preds, target, num_classes=2, average='none')[1].item())
+print(f1_score(preds, target, num_classes=2, average='macro').item())
