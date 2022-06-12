@@ -9,6 +9,7 @@ import argparse
 from glob import glob
 from multiprocessing import Pool
 from typing import Iterable, Literal, Tuple
+import numpy as np
 
 import torch
 from datasets import Dataset, load_dataset
@@ -20,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("name", help='path to load attentions')
 parser.add_argument("save_path", help='path to save the rationales')
 # to understand two args below, see discretize_attn()
-parser.add_argument("--strategy", help='Strategy for discretization, used in Jain et al., 2020', default='Top-k')
+parser.add_argument("--strategy", help='Strategy for discretization, used in Jain et al., 2020', default='TopK')
 parser.add_argument("--ratio", help='ratio of length of rationale to whole input.', default=0.2)
 args = parser.parse_args()
 
@@ -35,8 +36,8 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 
 # 2. extract rationales for every examples in the batch
 def extract(batch_i : int, 
-            strategy : Literal['continguous', 'Top-k'] = 'Top-k', 
-            ratio : float = 0.2):
+            strategy : Literal['Contin', 'TopK'], 
+            ratio : float):
     '''Extract rationales from examples using given heuristic and ratio.
     Args:
         batch_i: batch index used to load the attention weights
@@ -59,9 +60,13 @@ def extract(batch_i : int,
         rating = kr3_binary[batch_i*32 + example_i]['Rating']
         
         # extract rationale using functions below
-        attn = exclude_cls_sep(attn)
-        attn_per_word = get_attn_per_word(attn, words, tokenizer)
-        rationale, unrationale = discretize_attn(attn_per_word, words, strategy=strategy, ratio=ratio)
+        try:
+            attn = exclude_cls_sep(attn)
+            attn_per_word = get_attn_per_word(attn, words, tokenizer)
+            rationale, unrationale = discretize_attn(attn_per_word, words, strategy=strategy, ratio=ratio)
+        except IndexError:
+            print(f'IndexError at {batch_i}')
+            return
 
         # add item in the dataset
         kr3_rationale = kr3_rationale.add_item({'Rating':rating, 'Rationale':' '.join(rationale), 'Unrationale':' '.join(unrationale)})
@@ -125,8 +130,8 @@ def get_attn_per_word(attn : torch.Tensor, words : Iterable, tokenizer) -> torch
 # 2-3. Obtain rationales according to strategy
 def discretize_attn(attn : torch.Tensor, 
                     words : Iterable, 
-                    strategy : Literal['continguous', 'Top-k'] = 'Top-k',
-                    ratio : float = 0.2) -> Tuple[list]:
+                    strategy : Literal['TopK', 'Contin', 'Random_TopK', 'Random_Contin'],
+                    ratio : float) -> Tuple[list]:
     '''
     Dicscretize soft attentions scores into hard rationales.
     Args:
@@ -141,9 +146,23 @@ def discretize_attn(attn : torch.Tensor,
     '''
 
     assert len(attn) == len(words)
+    rationale_len = int(len(attn) * ratio)
 
-    if strategy == 'Top-k':
-        rationale_idxs = attn.argsort(descending=True)[:int(len(attn)*ratio)]
+    if strategy == 'Random_TopK':
+        rationale = np.random.permutation(words)[:rationale_len]
+        unrationale = np.random.permutation(words)[rationale_len:]
+        return rationale, unrationale
+
+
+    elif strategy == 'Random_Contin':
+        idx = np.random.randint(0, len(attn) - rationale_len)
+        rationale = words[idx : idx + rationale_len]
+        unrationale = words[: idx] + words[idx + rationale_len : ]
+        return rationale, unrationale
+
+
+    elif strategy == 'TopK':
+        rationale_idxs = attn.argsort(descending=True)[:rationale_len]
         rationale = [] # words in the rationale, ordered
         unrationale = [] # words not in the rationale, ordered
 
@@ -157,13 +176,12 @@ def discretize_attn(attn : torch.Tensor,
         return rationale, unrationale
 
 
-    else: # strategy == 'continguous'
-        rationale_len = int(len(attn) * ratio)
-        best_score = 0.0
+    else: # strategy == 'Contin'
+        best_score = -0.1
 
         for i in range(len(attn) - rationale_len):
             rationale_score = attn[i:i+rationale_len].sum()
-            if rationale_score > best_score: # best continguous rationale so far
+            if rationale_score > best_score: # best Contin rationale so far
                 best_score = rationale_score
                 rationale = words[i:i+rationale_len]
                 
@@ -181,5 +199,9 @@ def discretize_attn(attn : torch.Tensor,
 # 3. execute extract() with multiprocessing
 batch_i_list = [i for i in range(len(glob(f'outputs/{args.name}/attentions/batch_*.pt')))]
 
+def extract_mp(x):
+    '''Final function to use in multiprocessing, arguments specified by ArgParse'''
+    return extract(x, strategy=args.strategy, ratio=args.ratio)
+
 with Pool(127) as p:
-    p.map(extract, batch_i_list)
+    p.map(extract_mp, batch_i_list)

@@ -5,7 +5,6 @@
 # example: $ python fresh_train.py FT3_TopK
 
 from argparse import ArgumentParser
-from calendar import EPOCH
 from glob import glob
 
 import torch
