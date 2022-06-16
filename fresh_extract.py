@@ -34,11 +34,11 @@ kr3_binary = kr3.filter(lambda example: example['Rating'] != 2)
 tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 
 
-# 2. extract rationales for every examples in the batch
+# 2. main function: extract rationales for every examples in the batch
 def extract(batch_i : int, 
             strategy : Literal['Contin', 'TopK'], 
             ratio : float):
-    '''Extract rationales from examples using given heuristic and ratio.
+    '''Extract rationales from examples using given the strategy and ratio.
     Args:
         batch_i: batch index used to load the attention weights
         strategy: Strategy for discretization, used in Jain et al., 2020
@@ -60,13 +60,9 @@ def extract(batch_i : int,
         rating = kr3_binary[batch_i*32 + example_i]['Rating']
         
         # extract rationale using functions below
-        try:
-            attn = exclude_cls_sep(attn)
-            attn_per_word = get_attn_per_word(attn, words, tokenizer)
-            rationale, unrationale = discretize_attn(attn_per_word, words, strategy=strategy, ratio=ratio)
-        except IndexError:
-            print(f'IndexError at {batch_i}')
-            return
+        attn = exclude_cls_sep(attn)
+        attn_per_word = get_attn_per_word(attn, words, tokenizer)
+        rationale, unrationale = discretize_attn(attn_per_word, words, strategy=strategy, ratio=ratio)
 
         # add item in the dataset
         kr3_rationale = kr3_rationale.add_item({'Rating':rating, 'Rationale':' '.join(rationale), 'Unrationale':' '.join(unrationale)})

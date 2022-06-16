@@ -10,7 +10,8 @@ import transformers
 from datasets import Dataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import BertForSequenceClassification, BertTokenizer, DataCollatorWithPadding
+from transformers import (BertForSequenceClassification, BertTokenizer,
+                          DataCollatorWithPadding)
 
 # 0. argparse
 parser = argparse.ArgumentParser()
@@ -34,7 +35,7 @@ def is_adapter_transformer():
         return True
     return False
 
-## load the weights from provided artifact
+## load weights from the provided artifact
 if args.tuning_type == 'FT':
     assert not is_adapter_transformer()
     model.load_state_dict(torch.load(args.artifact_path, map_location=device))
