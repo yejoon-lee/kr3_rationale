@@ -37,7 +37,7 @@ test_paths = paths[int(len(paths)*.8) : ]
 device = torch.device('cuda')
 model = BertForSequenceClassification.from_pretrained('bert-base-multilingual-cased', num_labels=2)
 model = model.to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=float(args.lr))
+optimizer = torch.optim.AdamW(model.parameters(), lr=float(args.lr), weight_decay=5e-6)
 
 # metric(F1) using torchmetrics
 train_f1 = F1Score(num_classes=2, average='macro')
