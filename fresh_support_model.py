@@ -1,6 +1,6 @@
 # obtain and save part(see the code) of attentions and logits for later use
-# $ python inference.py [name] [artifact_path] [tuning_type]
-# example: $ python inference.py FT3 artifacts/finetuned_BERT:v0/misty-dust-2.pth FT
+# $ python fresh_support_model.py [name] [artifact_path] [tuning_type]
+# example: $ python fresh_support_model.py FT3 artifacts/finetuned_BERT:v0/misty-dust-2.pth FT
 
 import argparse
 import os
