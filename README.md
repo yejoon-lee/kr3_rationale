@@ -104,20 +104,20 @@ However, for contiguous rationales, there was no significant difference.
 - Why don't you fix the bug? -> in fact... (see the next section)
 
 ### KR3 is probably not **the most ideal** setting for rationale extraction
-Settings I'd prefer for rationale extraction...
+Settings I'd prefer for rationale extraction are
 - Long text (*vs* short text)
 - Text-based task (*vs* requires common sense/world knowledge) 
 - Information needed for the task compressed in a narrow region (*vs* scattered all over)
 
-Examples of more ideal settings
-- BoolQ
-- FEVER
-- Evidence Inference
-- ECtHR
+Examples of more ideal settings would be
+- BoolQ ([Clark et al., 2019](https://www.semanticscholar.org/paper/BoolQ%3A-Exploring-the-Surprising-Difficulty-of-Clark-Lee/9770fff7379a7ab9006b48939462354dda9a2053))
+- FEVER ([Thorne et al., 2018](https://www.semanticscholar.org/paper/FEVER%3A-a-Large-scale-Dataset-for-Fact-Extraction-Thorne-Vlachos/b1d24e8e08435b7c52335485a0d635abf9bc604c))
+- Evidence Inference ([Lehman et al., 2019](https://www.semanticscholar.org/paper/Inferring-Which-Medical-Treatments-Work-from-of-Lehman-DeYoung/6d529cf091a84200d721cdaf5419baf43ee21566))
+- ECtHR ([Chalkidis et al., 2021](https://www.semanticscholar.org/paper/Paragraph-level-Rationale-Extraction-through-A-case-Chalkidis-Fergadiotis/29584ed6d68a06fdf91440a018f6bc83a44fd177))
 
 
 
-## Examples
+## Example
 🍒 Cherry-picked example to show a long review. **Bold text** are the extracted **rationales**.   Korean is the original review. English version is first machine translated by Naver Papago, and then rationales are highlighted by myself.
 
 ---
@@ -136,9 +136,6 @@ It was the most popular on SNS, so I had a meal while visiting Sharosu-gil for t
 
 ---
 
+## Acknowledgements
 
-## Acknowledgement
-
-This work was done in the class, *Data Science Capstone Project* at Seoul National University. I thank professor [Wen-Syan Li](https://sites.google.com/view/appliedmllab/home) for the advise and [Seoul National University Graduate School of Data Science](https://gsds.snu.ac.kr/) for compute resources.
-
-## References
+This work was done in the class, *Data Science Capstone Project* at Seoul National University. I thank professor [Wen-Syan Li](https://sites.google.com/view/appliedmllab/home) for the support and [Seoul National University Graduate School of Data Science](https://gsds.snu.ac.kr/) for the compute resources.
