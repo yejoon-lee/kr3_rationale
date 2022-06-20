@@ -102,7 +102,7 @@ However, for contiguous rationales, there was no significant difference.
 | Remaining after Contiguous |     .74     |
 
 
-## Code & Trainig logs
+## Code & Training logs
 Order of python scripts:
 1. `fresh_support_model.py`
 1. `fresh_extract.py`
