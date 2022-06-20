@@ -1,4 +1,11 @@
-# Rationale Extraction for Sentiment Classification
+# Rationale Extraction in Sentiment Classification
+
+## Overview
+Many real-world scenarios demand the interpretability of NLP models. Despite of various interprertation methods, it's often hard to gurantee that those interpretation truly reflects the model's decision. Rationale extraction first extracts the releveant part of the input (rationale), and then use it as the only input to the predictor. This ensures the strict faithfulness of the rationale.  
+  
+In this project, I implemented FRESH ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)) for rationale extraction in sentiment classification, using [KR3: Korean Restaurant Review with Ratings](https://github.com/Wittgensteinian/kr3). Discontiguous rationale attained a comparable performance to the original paper, easily outperforming the random baseline. Unfortunately, this wasn't true for contiguous rationale.  
+  
+It's perhaps worth noting that rationale extraction could excel better in more appropriate settings.
 
 ## Background
 
@@ -33,9 +40,8 @@ Extracting the rationale, which is essentially assigning a binary mask to every 
 ([Lei et al., 2016](https://www.semanticscholar.org/paper/Rationalizing-Neural-Predictions-Lei-Barzilay/467d5d8fc766e73bfd3e9415f75479823f92c2f7)),
 while more recent works employed reparameterization ([Bastings et al., 2019](https://www.semanticscholar.org/paper/Interpretable-Neural-Predictions-with-Binary-Bastings-Aziz/8c5465eb110d0cab951ca6858a0d51ae759d2f9c); [Paranjape et al., 2020](https://www.semanticscholar.org/paper/An-Information-Bottleneck-Approach-for-Controlling-Paranjape-Joshi/c9aeb7e31b16b7273a80ae748b3ff48105928147#references)). Another work has bypassed this problem by decoupling the extraction and prediction, achieving a competitive performance with an ease of use ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)).
 
----
 
-## Overview
+## Project
 
 Succeeding my last project, [KR3: Korean Restaurant Review with Ratings](https://github.com/Wittgensteinian/kr3), I applied rationlae extraction on sentiment classification.   
 
@@ -49,7 +55,7 @@ FRESH could be divided into three parts.
 1. Use *feature scoring method* to obtain soft(continuous) score, and then discretize it with selected *strategy*.  
 1. Train *classifier* on the label and the extracted rationale.
 
-Since FRESH is a framework, many design choices could be made. These are some of the choices in the paper, with choice in this project marked **bold**. 
+Since FRESH is a framework, many design choices could be made. These are some of the choices in the paper, with choices in this project marked **bold**. 
 - Support Model: **BERT**
 - Feature Scoring Method: **attention**, gradient 
 - Strategy: **contiguous**, **Top-*k***
@@ -77,7 +83,7 @@ However, for contiguous rationales, there was no significant difference.
 ###  **Top-*k*** rationales showed **similar** degree of **performance drop** as in *Jain et al., 2020*
 - Compared to *SST*, the performance drop is similar. However, for contiguous rationales, the performance drop was larger. 
 - It's worth noting that for *Movies* the drop was marginal, though the rationale ratio is higher. 
-- Note that *SST* and *Movies* are chosen from several evaluation datasets from *Jain et al., 2020*, as these are sentiment classification, just like *KR3*.
+- Note that *SST* and *Movies* are chosen among several evaluation datasets from *Jain et al., 2020*, as these are sentiment classification, just like *KR3*.
 
 | Dataset (rationale ratio) |     *Jain* - SST  (20%)    |    *Jain* - Movies (30%)    | *Ours* -     KR3  (20%)    |
 |:-------------------:|:----------------:|:------------------:|:---------------:|
@@ -87,13 +93,23 @@ However, for contiguous rationales, there was no significant difference.
 
 ### **Remaining** text after rationales are extracted are **still powerful**.
 - This isn’t desirable, because it shows that rationales are not necessary for the prediction. 
-- I suspect this is largely due to the nature of the task, i.e., information is scattered all over the text.
+- I suspect this is largely due to the nature of the task, i.e. information is scattered all over the text.
 
 | Method                     | Performance |
 |----------------------------|:-----------:|
 | Full text                  |     .93     |
 | Remaining after Top-*k*      |     .74     |
 | Remaining after Contiguous |     .74     |
+
+
+## Code & Trainig logs
+Order of python scripts:
+1. `fresh_support_model.py`
+1. `fresh_extract.py`
+1. `fresh_tokenize.py`
+1. `fresh_train.py`
+
+Training logs: [Weights & Biases](https://wandb.ai/wittgensteinian/kr4?workspace=user-wittgensteinian)
 
 
 ## Limits (truth be told...)
@@ -134,7 +150,6 @@ It was the most popular on SNS, so I had a meal while visiting **Sharosu-gil** f
 *(Contiguous;  negative)*   
 It was the most popular on SNS, so I had a meal while visiting Sharosu-gil for the first time. I put my name on the waiting list and waited for about 40 minutes to eat. Wow, the first few spoons **taste like something else. I couldn't enjoy eating because I felt sick from the middle.** I don't want to go there twice. Of course, there will be personal preferences, but the middle school and elementary school daughter who accompanied them said it was not delicious. It's a long-awaited lunch. I think you should listen to social media.
 
----
 
 ## Acknowledgements
 
