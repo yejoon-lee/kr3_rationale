@@ -36,7 +36,7 @@ This is where *rationale extraction* comes in. Instead of attributing the model'
 
 ### 🔦 Rational Extraction 
 
-Extracting the rationale, which is essentially assigning a binary mask to every input token, is non-differentiable. To tackle this problem, reinforcement learning was initially s
+Extracting the rationale, which is essentially assigning a binary mask to every input token, is non-differentiable. To tackle this problem, reinforcement learning was initially employed
 ([Lei et al., 2016](https://www.semanticscholar.org/paper/Rationalizing-Neural-Predictions-Lei-Barzilay/467d5d8fc766e73bfd3e9415f75479823f92c2f7)),
 while more recent works employed reparameterization ([Bastings et al., 2019](https://www.semanticscholar.org/paper/Interpretable-Neural-Predictions-with-Binary-Bastings-Aziz/8c5465eb110d0cab951ca6858a0d51ae759d2f9c); [Paranjape et al., 2020](https://www.semanticscholar.org/paper/An-Information-Bottleneck-Approach-for-Controlling-Paranjape-Joshi/c9aeb7e31b16b7273a80ae748b3ff48105928147#references)). Another work has bypassed this problem by decoupling the extraction and prediction, achieving a competitive performance with an ease of use ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)).
 
