@@ -5,7 +5,7 @@ Many real-world scenarios demand the interpretability of NLP models. Despite of 
   
 In this project, I implemented FRESH ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)) for rationale extraction in sentiment classification, using [KR3: Korean Restaurant Review with Ratings](https://github.com/Wittgensteinian/kr3). Discontiguous rationale attained a comparable performance to the original paper, easily outperforming the random baseline. Unfortunately, this wasn't true for contiguous rationale. Plus, it's perhaps worth noting that rationale extraction could excel better in more appropriate settings.   
   
-[Presentation slides](https://mysnu-my.sharepoint.com/:b:/g/personal/leeyejoon_seoul_ac_kr/EdMMr75D4kRFviVsoNr1OMgBk7yLlIGTpg0eg1hbWUQTTw?e=nWG7a8) used in the class.
+[Presentation slides](https://drive.google.com/file/d/19iwwN2DYzpCxZh95uYb4O07TV3fuBH1h/view?usp=sharing) used in the class.
 
 ## Background
 
