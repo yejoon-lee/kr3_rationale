@@ -1,9 +1,9 @@
 # Rationale Extraction in Sentiment Classification
 
-## Overview
-Many real-world scenarios demand the interpretability of NLP models. Despite of various interprertation methods, it's often hard to gurantee that those interpretation truly reflects the model's decision. Rationale extraction first extracts the releveant part of the input (rationale), and then use it as the only input to the predictor. This ensures the strict faithfulness of the rationale.  
+## Abstract
+Many real-world scenarios demand the interpretability of NLP models. Despite various interpretation methods, it's often hard to guarantee those interpretations to truly reflect the model's decision. Meanwhile, rationale extraction first **extracts** the relevant part of the input (rationale), and then feed it as the **only** input to the predictor. This ensures the **strict faithfulness** of the rationale.    
   
-In this project, I implemented FRESH ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)) for rationale extraction in sentiment classification, using [KR3: Korean Restaurant Review with Ratings](https://github.com/Wittgensteinian/kr3). Discontiguous rationale attained a comparable performance to the original paper, easily outperforming the random baseline. Unfortunately, this wasn't true for contiguous rationale. Plus, it's perhaps worth noting that rationale extraction could excel better in more appropriate settings.   
+In this project, I implemented FRESH ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)) for rationale extraction in sentiment classification, using [KR3: Korean Restaurant Review with Ratings](https://github.com/Wittgensteinian/kr3). Discontiguous rationale attained a comparable performance to the original paper, easily outperforming the random baseline. Unfortunately, this wasn't true for contiguous rationale. Plus, it would be worth noting that rationale extraction could excel better in more appropriate settings. This discussion is elaborated in the section *Limits*.  
   
 [Presentation slides](https://drive.google.com/file/d/19iwwN2DYzpCxZh95uYb4O07TV3fuBH1h/view?usp=sharing) used in the class.
 
@@ -32,11 +32,11 @@ Meanwhile, some claims that strictly faithful interpretation is impossible.
 > *...we believe ***strictly faithful interpretation is a 'unicorn'*** which will likely never be found.*   
 [Jacovi and Golberg, 2020](https://www.semanticscholar.org/paper/Towards-Faithfully-Interpretable-NLP-Systems%3A-How-Jacovi-Goldberg/579476d19566efc842929ea6bdd18ab760c8cfa2)
 
-This is where *rationale extraction* comes in. Instead of attributing the model's decision to a certain part of the input, this framework extracts the important part of the input and use it as the *only* input to the prediction model. In this way, no matter how complex the prediction model is, we can gurantee that the extracted input is fully faithful to the model's prediction.
+This is where *rationale extraction* comes in. Instead of attributing the model's decision to a certain part of the input, this framework **extracts** the important part of the input and feed it as the **only** input to the prediction model. In this way, no matter how complex the prediction model is, we can guarantee that the extracted input is **fully faithful** to the model's prediction. Hence, this framework is known to be *faithful-by-construction* ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)).
 
 ### 🔦 Rational Extraction 
 
-Extracting the rationale, which is essentially assigning a binary mask to every input token, is non-differentiable. To tackle this problem, reinforcement learning was initially proposed
+Extracting the rationale, which is essentially assigning a binary mask to every input token, is non-differentiable. To tackle this problem, using reinforcement learning was initially proposed
 ([Lei et al., 2016](https://www.semanticscholar.org/paper/Rationalizing-Neural-Predictions-Lei-Barzilay/467d5d8fc766e73bfd3e9415f75479823f92c2f7)),
 while more recent works employed reparameterization ([Bastings et al., 2019](https://www.semanticscholar.org/paper/Interpretable-Neural-Predictions-with-Binary-Bastings-Aziz/8c5465eb110d0cab951ca6858a0d51ae759d2f9c); [Paranjape et al., 2020](https://www.semanticscholar.org/paper/An-Information-Bottleneck-Approach-for-Controlling-Paranjape-Joshi/c9aeb7e31b16b7273a80ae748b3ff48105928147#references)). Another work has bypassed this problem by decoupling the extraction and prediction, achieving a competitive performance with an ease of use ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)).
 
@@ -55,7 +55,7 @@ FRESH could be divided into three parts.
 1. Use *feature scoring method* to obtain soft(continuous) score, and then discretize it with selected *strategy*.  
 1. Train *classifier* on the label and the extracted rationale.
 
-Since FRESH is a framework, many design choices could be made. These are some of the choices in the paper, with choices in this project marked **bold**. 
+Since FRESH is a framework, many design choices could be made. Following are some of the choices in the paper, with choices in this project marked **bold**. 
 - Support Model: **BERT**
 - Feature Scoring Method: **attention**, gradient 
 - Strategy: **contiguous**, **Top-*k***
@@ -65,9 +65,11 @@ Since FRESH is a framework, many design choices could be made. These are some of
 
 ## Result
 
+Among the two aspects of interpretability, faithfulness doesn't have to be evaluated. This is due to the nature of *faithful-by-construction* framework. The other aspect, plausibility, requires human evaluation which I couldn’t afford. Results below only show the performance of the model, which is also crucial. If the prediction is faithful but wrong, what’s the point?
+
 ### Notes
 - All the performance metrcs are **macro F1**, so *higher-the-better*.
-- All the metrics from the paper are reported from the paper, i.e. not reproduced.
+- All the metrics regarding to *Jain et al., 2020* are reported in the paper, i.e. not reproduced.
 
 ### **Top-*k*** rationales extracted from attention were **better than random** rationales.
 However, for contiguous rationales, there was no significant difference.
