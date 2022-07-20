@@ -34,7 +34,7 @@ Meanwhile, some claims that strictly faithful interpretation is impossible.
 
 This is where *rationale extraction* comes in. Instead of attributing the model's decision to a certain part of the input, this framework first **extracts** the important part of the input and then feed it as the **only** input to the prediction model. In this way, no matter how complex the prediction model is, we can guarantee that the extracted input is **fully faithful** to the model's prediction. Hence, this framework is known to be *faithful-by-construction* ([Jain et al., 2020](https://www.semanticscholar.org/paper/Learning-to-Faithfully-Rationalize-by-Construction-Jain-Wiegreffe/922e6e3bafe38a712597c05d3a907bd10763b427?sort=is-influential)).
 
-### 🔦 Rational Extraction 
+### 🔦 Rationale Extraction 
 
 Extracting the rationale, which is essentially assigning a binary mask to every input token, is non-differentiable. To tackle this problem, using reinforcement learning was initially proposed
 ([Lei et al., 2016](https://www.semanticscholar.org/paper/Rationalizing-Neural-Predictions-Lei-Barzilay/467d5d8fc766e73bfd3e9415f75479823f92c2f7)),
